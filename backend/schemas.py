@@ -44,6 +44,8 @@ class ExerciseResponse(BaseModel):
 class SubmitExerciseRequest(BaseModel):
     session_id: str
     answers: list[dict]  # [{question, user_answer, correct_answer, type?}]
+    per_question_times: Optional[list[float]] = None  # seconds per question
+    total_time_seconds: Optional[float] = None        # fallback total time
 
 
 class SubmitExerciseResponse(BaseModel):
@@ -53,6 +55,13 @@ class SubmitExerciseResponse(BaseModel):
     new_level: str
     level_changed: bool
     mastery: float
+    # Cognitive load
+    adaptive_mode: str = "standard"
+    cognitive_strain_index: float = 0.0
+    avg_response_time: float = 0.0
+    # Stress detection
+    stress_detected: bool = False
+    recommended_action: Optional[str] = None
 
 
 # --- Material upload ---
@@ -127,10 +136,29 @@ class ProgressResponse(BaseModel):
     accuracy: float
     level_history: list[str]
     mastery: float
-    weaknesses: list[str]
+    weaknesses: list[dict]
     recommendations: list[str]
     topic_accuracy: dict
     type_accuracy: dict
+    # Cognitive metrics
+    cognitive_strain_index: float = 0.0
+    avg_response_time: float = 0.0
+    adaptive_mode: Optional[str] = None
+    # Weakness DNA
+    weakness_profile: dict = {}
+
+
+class WeaknessTopicEntry(BaseModel):
+    mastery_score: float
+    error_types: list[str]
+    recurring_patterns: list[str]
+    last_updated: Optional[str] = None
+
+
+class WeaknessProfileResponse(BaseModel):
+    session_id: str
+    subject: str
+    weakness_profile: dict  # topic -> WeaknessTopicEntry dict
 
 
 # --- Authentication ---

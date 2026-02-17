@@ -12,6 +12,7 @@
   --bg-elevated: #f4f5f9;
   --bg-hover: #ecedf3;
   --bg-input: #ffffff;
+  --surface: #ffffff;
 
   --accent-primary: #7c3aed;
   --accent-secondary: #8b5cf6;
@@ -60,6 +61,7 @@
   --bg-elevated: #16161f;
   --bg-hover: #1c1c28;
   --bg-input: #0e0e16;
+  --surface: #111119;
 
   --accent-primary: #7c3aed;
   --accent-secondary: #a78bfa;
@@ -119,6 +121,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Smooth theme transition */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
+}
+
 ::selection {
   background-color: var(--selection-bg);
   color: var(--selection-text);
@@ -156,10 +166,12 @@ body {
 
   .btn-primary {
     @apply relative overflow-hidden rounded-xl bg-accent-primary px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-accent-muted hover:shadow-glow-md active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
+    min-height: 44px;
   }
 
   .btn-secondary {
     @apply rounded-xl border border-border-secondary bg-bg-elevated px-6 py-3 text-sm font-medium text-text-secondary transition-all duration-300 hover:border-border-hover hover:bg-bg-hover hover:text-text-primary hover:shadow-glow-sm;
+    min-height: 44px;
   }
 
   .btn-nav {
@@ -313,4 +325,13 @@ input[type="range"].sound-slider::-moz-range-thumb {
 .animate-text-shimmer {
   background-size: 200% auto;
   animation: text-shimmer 4s linear infinite;
+}
+
+/* ── Animated dashed border pulse for drag-over ── */
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--accent-primary); }
+  50% { border-color: var(--accent-secondary); }
+}
+.animate-pulse-border {
+  animation: pulse-border 1.2s ease-in-out infinite;
 }

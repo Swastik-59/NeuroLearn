@@ -63,6 +63,13 @@ export interface SubmitResponse {
   new_level: string;
   level_changed: boolean;
   mastery: number;
+  // Cognitive load
+  adaptive_mode: string;
+  cognitive_strain_index: number;
+  avg_response_time: number;
+  // Stress
+  stress_detected: boolean;
+  recommended_action: string | null;
 }
 
 export interface ProgressResponse {
@@ -74,10 +81,21 @@ export interface ProgressResponse {
   accuracy: number;
   level_history: string[];
   mastery: number;
-  weaknesses: string[];
+  weaknesses: { kind: string; name: string; accuracy: number }[];
   recommendations: string[];
   topic_accuracy: Record<string, { correct: number; total: number }>;
   type_accuracy: Record<string, { correct: number; total: number }>;
+  // Cognitive metrics
+  cognitive_strain_index: number;
+  avg_response_time: number;
+  adaptive_mode: string | null;
+  // Weakness DNA
+  weakness_profile: Record<string, {
+    mastery_score: number;
+    error_types: string[];
+    recurring_patterns: string[];
+    last_updated: string | null;
+  }>;
 }
 
 export interface Flashcard {
@@ -174,9 +192,16 @@ export async function generateExercise(
 
 export async function submitExercise(
   session_id: string,
-  answers: { question: string; user_answer: string; correct_answer: string; type?: string }[]
+  answers: { question: string; user_answer: string; correct_answer: string; type?: string }[],
+  per_question_times?: number[],
+  total_time_seconds?: number,
 ): Promise<SubmitResponse> {
-  const res = await api.post("/submit-exercise", { session_id, answers });
+  const res = await api.post("/submit-exercise", {
+    session_id,
+    answers,
+    per_question_times,
+    total_time_seconds,
+  });
   return res.data;
 }
 
@@ -230,6 +255,13 @@ export async function generateFlashcards(
 export async function getProgress(session_id: string): Promise<ProgressResponse> {
   const res = await api.post("/progress", { session_id });
   return res.data;
+}
+
+export async function getWeaknessProfile(
+  session_id: string
+): Promise<ProgressResponse["weakness_profile"]> {
+  const res = await api.get(`/weakness-profile/${session_id}`);
+  return res.data.weakness_profile;
 }
 
 // ---------------------------------------------------------------------------

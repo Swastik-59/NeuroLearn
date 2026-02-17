@@ -47,6 +47,7 @@ module.exports = {
           bg: "var(--glass-bg)",
           border: "var(--glass-border)",
         },
+        surface: "var(--surface)",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
@@ -83,8 +84,13 @@ module.exports = {
         "glow-sm": "var(--glow-sm)",
         "glow-md": "var(--glow-md)",
         "glow-lg": "0 0 60px rgba(124,58,237,0.25)",
-        "card": "0 4px 24px rgba(0,0,0,0.3)",
-        "elevated": "0 8px 40px rgba(0,0,0,0.4)",
+        "card": "0 1px 3px rgba(0,0,0,0.08), 0 4px 24px rgba(0,0,0,0.04)",
+        "card-hover": "0 2px 8px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.06)",
+        "elevated": "0 8px 40px rgba(0,0,0,0.12)",
+        "dock": "0 -4px 30px rgba(0,0,0,0.15)",
+      },
+      screens: {
+        "xs": "375px",
       },
     },
   },

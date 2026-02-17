@@ -1,10 +1,60 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, useMotionValue, useSpring, useInView } from "framer-motion";
 import { getProgress, ProgressResponse } from "@/lib/api";
 import DifficultyBadge from "@/components/DifficultyBadge";
 import ProgressBar from "@/components/ProgressBar";
+import { sectionReveal } from "@/lib/animations";
+
+/** Animated counter that counts up from 0 */
+function AnimatedCounter({ value, suffix = "", className }: { value: number; suffix?: string; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  const motionVal = useMotionValue(0);
+  const spring = useSpring(motionVal, { stiffness: 80, damping: 20 });
+
+  useEffect(() => {
+    if (inView) motionVal.set(value);
+  }, [inView, value, motionVal]);
+
+  useEffect(() => {
+    const unsubscribe = spring.on("change", (latest) => {
+      if (ref.current) ref.current.textContent = `${Math.round(latest)}${suffix}`;
+    });
+    return unsubscribe;
+  }, [spring, suffix]);
+
+  return <span ref={ref} className={className}>0{suffix}</span>;
+}
+
+/** SVG circular mastery ring */
+function MasteryRing({ value, size = 100 }: { value: number; size?: number }) {
+  const r = (size - 10) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (value / 100) * circ;
+  const color = value >= 70 ? "#22c55e" : value >= 40 ? "#f59e0b" : "#ef4444";
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={5} className="text-border-primary" />
+        <motion.circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={color} strokeWidth={5} strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.3 }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <AnimatedCounter value={value} suffix="%" className="text-xl font-bold text-text-primary" />
+        <span className="text-[9px] uppercase tracking-widest text-text-dim">Mastery</span>
+      </div>
+    </div>
+  );
+}
 
 interface DashboardPageProps {
   sessionId: string;
@@ -82,8 +132,24 @@ export default function DashboardPage({
   // Type accuracy entries
   const typeEntries = Object.entries(progress.type_accuracy || {});
 
+  // Cognitive / NeuroAdaptive derived values
+  const csi = progress.cognitive_strain_index ?? 0;
+  const stabilityScore = Math.max(0, Math.round(100 - csi));
+  const avgRT = progress.avg_response_time ?? 0;
+  const adaptiveMode = progress.adaptive_mode ?? null;
+  const weaknessEntries = Object.entries(progress.weakness_profile ?? {}).sort(
+    (a, b) => (a[1] as any).mastery_score - (b[1] as any).mastery_score
+  );
+
+  const adaptiveModeLabel: Record<string, { label: string; color: string }> = {
+    fluency_training:      { label: "Fluency Training",      color: "text-sky-400 border-sky-400/25 bg-sky-400/8" },
+    concept_reinforcement: { label: "Concept Reinforcement", color: "text-amber-400 border-amber-400/25 bg-amber-400/8" },
+    cognitive_overload:    { label: "Cognitive Overload",    color: "text-red-400 border-red-400/25 bg-red-400/8" },
+    standard:              { label: "Standard",               color: "text-text-secondary border-border-primary bg-bg-elevated" },
+  };
+
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-4xl">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -101,8 +167,8 @@ export default function DashboardPage({
         </p>
       </motion.div>
 
-      {/* Top stats: 5-column grid */}
-      <div className="mb-6 grid gap-3 grid-cols-2 sm:grid-cols-5">
+      {/* Top stats: responsive grid */}
+      <div className="mb-6 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         {[
           { label: "Level", value: progress.level, type: "badge" as const, color: "text-accent-secondary" },
           { label: "Mastery", value: `${progress.mastery}%`, type: "text" as const, color: masteryColor },
@@ -122,33 +188,135 @@ export default function DashboardPage({
             {stat.type === "badge" ? (
               <DifficultyBadge level={stat.value} />
             ) : (
-              <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+              <p className={`text-xl sm:text-2xl font-bold ${stat.color}`}>
+                <AnimatedCounter value={parseInt(stat.value)} suffix={stat.value.includes('%') ? '%' : ''} className={stat.color} />
+              </p>
             )}
           </motion.div>
         ))}
       </div>
 
-      {/* Mastery + accuracy bars */}
+      {/* Mastery ring + accuracy bars */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.35 }}
+        variants={sectionReveal}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
         className="mb-6 overflow-hidden rounded-xl border border-border-primary bg-bg-card"
       >
         <div className="h-px bg-gradient-to-r from-transparent via-accent-primary/40 to-transparent" />
-        <div className="p-6 space-y-5">
-          <ProgressBar value={progress.mastery} label="Mastery Score" size="lg" showGlow />
-          <ProgressBar value={progress.accuracy} label="Overall Accuracy" />
-          <ProgressBar value={levelProgress} label="Level Progression" />
+        <div className="flex flex-col sm:flex-row items-center gap-6 p-6">
+          <MasteryRing value={progress.mastery} size={110} />
+          <div className="flex-1 w-full space-y-5">
+            <ProgressBar value={progress.mastery} label="Mastery Score" size="lg" showGlow />
+            <ProgressBar value={progress.accuracy} label="Overall Accuracy" />
+            <ProgressBar value={levelProgress} label="Level Progression" />
+          </div>
         </div>
       </motion.div>
+
+      {/* Cognitive Metrics */}
+      <motion.div
+        variants={sectionReveal}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        className="mb-6 overflow-hidden rounded-xl border border-border-primary bg-bg-card"
+      >
+        <div className="h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent" />
+        <div className="p-6">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-text-primary">
+            <svg className="h-4 w-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
+            Cognitive Metrics
+            {adaptiveMode && adaptiveModeLabel[adaptiveMode] && (
+              <span className={`ml-auto rounded-lg border px-2.5 py-0.5 text-xs font-medium ${adaptiveModeLabel[adaptiveMode].color}`}>
+                {adaptiveModeLabel[adaptiveMode].label}
+              </span>
+            )}
+          </h3>
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 mb-5">
+            <div className="rounded-lg border border-border-primary bg-bg-elevated p-3 text-center">
+              <p className="text-lg font-bold text-violet-400">{stabilityScore}</p>
+              <p className="text-[10px] uppercase tracking-wider text-text-dim mt-0.5">Stability Score</p>
+            </div>
+            <div className="rounded-lg border border-border-primary bg-bg-elevated p-3 text-center">
+              <p className={`text-lg font-bold ${csi >= 70 ? "text-status-error" : csi >= 40 ? "text-amber-400" : "text-status-success"}`}>
+                {Math.round(csi)}
+              </p>
+              <p className="text-[10px] uppercase tracking-wider text-text-dim mt-0.5">Strain Index</p>
+            </div>
+            <div className="rounded-lg border border-border-primary bg-bg-elevated p-3 text-center">
+              <p className="text-lg font-bold text-sky-400">{avgRT > 0 ? avgRT.toFixed(1) : "—"}s</p>
+              <p className="text-[10px] uppercase tracking-wider text-text-dim mt-0.5">Avg Response</p>
+            </div>
+          </div>
+          <ProgressBar value={stabilityScore} label="Cognitive Stability" showGlow />
+          <div className="mt-3">
+            <ProgressBar value={csi} label="Cognitive Strain Index" />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Weakness DNA */}
+      {weaknessEntries.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.41 }}
+          className="mb-6 overflow-hidden rounded-xl border border-red-500/20 bg-bg-card"
+        >
+          <div className="h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent" />
+          <div className="p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <svg className="h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Weakness DNA
+              <span className="ml-auto text-[10px] text-text-dim font-normal">Topics needing reinforcement</span>
+            </h3>
+            <div className="space-y-4">
+              {weaknessEntries.map(([topic, data]: [string, any]) => {
+                const mastery = Math.round(data.mastery_score ?? 0);
+                const masteryCol =
+                  mastery >= 60 ? "text-status-success" : mastery >= 35 ? "text-amber-400" : "text-status-error";
+                return (
+                  <div key={topic}>
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-xs font-medium text-text-secondary capitalize">{topic}</span>
+                      <span className={`text-xs font-bold ${masteryCol}`}>{mastery}% mastery</span>
+                    </div>
+                    <ProgressBar value={mastery} />
+                    {(data.error_types?.length > 0 || data.recurring_patterns?.length > 0) && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {data.error_types?.map((e: string) => (
+                          <span key={e} className="rounded bg-status-error/10 px-2 py-0.5 text-[10px] text-status-error">
+                            {e}
+                          </span>
+                        ))}
+                        {data.recurring_patterns?.map((p: string) => (
+                          <span key={p} className="rounded bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-400">
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Topic accuracy heatmap */}
       {topicEntries.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.4 }}
+          variants={sectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
           className="mb-6 overflow-hidden rounded-xl border border-border-primary bg-bg-card"
         >
           <div className="h-px bg-gradient-to-r from-transparent via-accent-primary/40 to-transparent" />
@@ -158,8 +326,8 @@ export default function DashboardPage({
               {topicEntries.map(([topic, data]: [string, any]) => {
                 const acc = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
                 return (
-                  <div key={topic} className="flex items-center gap-3">
-                    <span className="w-28 truncate text-xs text-text-secondary" title={topic}>
+                  <div key={topic} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                    <span className="w-full sm:w-28 truncate text-xs text-text-secondary" title={topic}>
                       {topic}
                     </span>
                     <div className="flex-1">
@@ -179,9 +347,10 @@ export default function DashboardPage({
       {/* Type accuracy */}
       {typeEntries.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.45 }}
+          variants={sectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
           className="mb-6 overflow-hidden rounded-xl border border-border-primary bg-bg-card"
         >
           <div className="h-px bg-gradient-to-r from-transparent via-accent-primary/40 to-transparent" />
@@ -218,9 +387,9 @@ export default function DashboardPage({
           <div className="p-6">
             <h3 className="mb-3 text-sm font-semibold text-text-primary">Areas to Improve</h3>
             <div className="flex flex-wrap gap-2">
-              {progress.weaknesses.map((w) => (
-                <span key={w} className="rounded-lg bg-status-error/10 px-2.5 py-1 text-xs text-status-error">
-                  {w}
+              {progress.weaknesses.map((w, i) => (
+                <span key={i} className="rounded-lg bg-status-error/10 px-2.5 py-1 text-xs text-status-error">
+                  {w.name} ({w.accuracy}%)
                 </span>
               ))}
             </div>
@@ -296,16 +465,16 @@ export default function DashboardPage({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.65 }}
-        className="flex flex-wrap justify-center gap-3"
+        className="flex flex-wrap justify-center gap-3 px-2 sm:px-0"
       >
-        <button onClick={onContinue} className="btn-primary flex items-center gap-2">
+        <button onClick={onContinue} className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
           </svg>
           Continue Learning
         </button>
         {onFlashcards && (
-          <button onClick={onFlashcards} className="btn-secondary flex items-center gap-2">
+          <button onClick={onFlashcards} className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75 6.429 9.75m11.142 0l4.179 2.25L12 17.25 2.25 12l4.179-2.25" />
             </svg>
@@ -313,14 +482,14 @@ export default function DashboardPage({
           </button>
         )}
         {onUpload && (
-          <button onClick={onUpload} className="btn-secondary flex items-center gap-2">
+          <button onClick={onUpload} className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
             Upload Material
           </button>
         )}
-        <button onClick={onRestart} className="btn-secondary flex items-center gap-2">
+        <button onClick={onRestart} className="btn-secondary w-full sm:w-auto flex items-center justify-center gap-2">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
           </svg>

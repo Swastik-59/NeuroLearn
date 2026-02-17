@@ -11,6 +11,7 @@ from schemas import (
     SubmitExerciseRequest,
     SubmitExerciseResponse,
     ProgressResponse,
+    WeaknessProfileResponse,
     MaterialUploadResponse,
     MaterialGenerateRequest,
     MaterialLessonResponse,
@@ -41,6 +42,9 @@ from performance_tracker import (
     compute_mastery,
     detect_weaknesses,
     get_study_recommendations,
+    detect_stress,
+    get_weakness_dna,
+    empty_performance,
 )
 from material_rag import (
     extract_text,
@@ -201,14 +205,24 @@ async def submit_exercise(req: SubmitExerciseRequest):
     correct, total = _score_answers(req.answers)
     accuracy = (correct / total * 100) if total > 0 else 0
 
+    # Resolve timing data
+    per_q_times: list[float] | None = None
+    total_time = 0.0
+    if req.per_question_times and len(req.per_question_times) == total:
+        per_q_times = [max(0.0, float(t)) for t in req.per_question_times]
+        total_time = sum(per_q_times)
+    elif req.total_time_seconds is not None:
+        total_time = max(0.0, float(req.total_time_seconds))
+
     # Update performance
-    perf = session.get("performance", None)
-    if perf is None:
-        from performance_tracker import empty_performance
-        perf = empty_performance()
+    perf = session.get("performance") or empty_performance()
     scored = _add_correct_flags(req.answers)
     qtype = scored[0].get("type", "short") if scored else "short"
-    perf = record_answers(perf, scored, qtype, session["subject"])
+    perf = record_answers(
+        perf, scored, qtype, session["subject"],
+        time_seconds=total_time,
+        per_question_times=per_q_times,
+    )
     mastery = compute_mastery(perf)
 
     new_level = adjust_level(session["level"], accuracy, mastery)
@@ -227,6 +241,15 @@ async def submit_exercise(req: SubmitExerciseRequest):
         performance=perf,
     )
 
+    # Cognitive metrics
+    rt_list: list[float] = perf.get("response_times", [])
+    avg_rt = round(sum(rt_list) / len(rt_list), 1) if rt_list else 0.0
+    csi = perf.get("cognitive_strain_index", 0.0)
+    adaptive_mode = perf.get("adaptive_mode", "standard") or "standard"
+
+    # Stress detection
+    stress_signal = detect_stress(perf)
+
     return SubmitExerciseResponse(
         accuracy=round(accuracy, 1),
         correct=correct,
@@ -234,6 +257,11 @@ async def submit_exercise(req: SubmitExerciseRequest):
         new_level=new_level,
         level_changed=level_changed,
         mastery=round(mastery, 1),
+        adaptive_mode=adaptive_mode,
+        cognitive_strain_index=csi,
+        avg_response_time=avg_rt,
+        stress_detected=stress_signal["stress_detected"],
+        recommended_action=stress_signal["recommended_action"],
     )
 
 
@@ -348,14 +376,14 @@ async def progress(req: GenerateRequest):
     total = session["total_attempts"]
     accuracy = (session["total_correct"] / total * 100) if total > 0 else 0
 
-    perf = session.get("performance", None)
-    if perf is None:
-        from performance_tracker import empty_performance
-        perf = empty_performance()
+    perf = session.get("performance") or empty_performance()
 
     mastery = compute_mastery(perf)
     weaknesses = detect_weaknesses(perf)
     recs = get_study_recommendations(perf, session["subject"])
+
+    rt_list: list[float] = perf.get("response_times", [])
+    avg_rt = round(sum(rt_list) / len(rt_list), 1) if rt_list else 0.0
 
     return ProgressResponse(
         session_id=session["id"],
@@ -370,6 +398,25 @@ async def progress(req: GenerateRequest):
         recommendations=recs,
         topic_accuracy=perf.get("topic_accuracy", {}),
         type_accuracy=perf.get("type_accuracy", {}),
+        cognitive_strain_index=perf.get("cognitive_strain_index", 0.0),
+        avg_response_time=avg_rt,
+        adaptive_mode=perf.get("adaptive_mode"),
+        weakness_profile=get_weakness_dna(perf),
+    )
+
+
+@router.get("/weakness-profile/{session_id}", response_model=WeaknessProfileResponse)
+async def weakness_profile(session_id: str):
+    """Return the Weakness DNA profile for a session."""
+    session = await get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    perf = session.get("performance") or empty_performance()
+    return WeaknessProfileResponse(
+        session_id=session["id"],
+        subject=session["subject"],
+        weakness_profile=get_weakness_dna(perf),
     )
 
 

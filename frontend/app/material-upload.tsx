@@ -180,7 +180,7 @@ export default function MaterialUpload({
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-text-primary">Upload Study Material</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Upload Study Material</h2>
         <p className="mt-1 text-sm text-text-secondary">
           Upload a <span className="font-medium text-accent-secondary">PDF</span> or{" "}
           <span className="font-medium text-accent-secondary">PPTX</span> file to generate lessons and exercises from your own material
@@ -233,9 +233,9 @@ export default function MaterialUpload({
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
             onClick={() => inputRef.current?.click()}
-            className={`group relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed p-12 transition-all duration-300 ${
+            className={`group relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed p-8 sm:p-12 transition-all duration-300 ${
               dragOver
-                ? "border-accent-primary bg-accent-primary/[0.06] shadow-glow-sm"
+                ? "border-accent-primary bg-accent-primary/[0.06] shadow-glow-sm animate-pulse-border"
                 : file
                 ? "border-accent-primary/40 bg-accent-primary/[0.03]"
                 : "border-border-secondary bg-bg-card hover:border-accent-primary/30 hover:bg-bg-elevated"
@@ -391,7 +391,7 @@ export default function MaterialUpload({
                     exit={{ opacity: 0, height: 0 }}
                   >
                     <label className="mb-1.5 block text-xs font-medium text-text-dim">Question Type</label>
-                    <div className="grid grid-cols-5 gap-1.5">
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                       {([
                         { v: "short" as QuestionType, l: "Short" },
                         { v: "mcq" as QuestionType, l: "MCQ" },

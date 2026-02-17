@@ -63,3 +63,35 @@ export const pageTransition = {
   exit: { opacity: 0, y: -16 },
   transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] },
 };
+
+/** Scroll-triggered section reveal (use with whileInView) */
+export const sectionReveal: Variants = {
+  hidden: { opacity: 0, y: 32 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+};
+
+/** Card hover scale */
+export const cardHover = {
+  rest: { scale: 1 },
+  hover: { scale: 1.02, transition: { duration: 0.2, ease: "easeOut" } },
+};
+
+/** Stagger children with scroll reveal */
+export const staggerReveal: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06, delayChildren: 0.05 },
+  },
+};
+
+/** Counter count-up — intended for use with useMotionValue/animate */
+export const counterSpring = {
+  type: "spring" as const,
+  stiffness: 80,
+  damping: 20,
+};

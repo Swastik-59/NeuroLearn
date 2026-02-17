@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { generateFlashcards, type Flashcard } from "../lib/api";
 
 const SUBJECTS = [
@@ -79,6 +79,28 @@ export default function Flashcards({ sessionId, subject: propSubject, hasMateria
       return next;
     });
   };
+
+  // Keyboard navigation: Left/Right arrows, Space for flip
+  useEffect(() => {
+    if (!generated) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") next();
+      else if (e.key === "ArrowLeft") prev();
+      else if (e.key === " ") { e.preventDefault(); setFlipped((f) => !f); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [generated, current, cards.length]);
+
+  // Swipe support via drag
+  const dragX = useMotionValue(0);
+  const dragRotate = useTransform(dragX, [-200, 200], [-8, 8]);
+  const dragOpacity = useTransform(dragX, [-200, -80, 0, 80, 200], [0.5, 1, 1, 1, 0.5]);
+
+  const handleDragEnd = useCallback((_: any, info: PanInfo) => {
+    if (info.offset.x > 80) prev();
+    else if (info.offset.x < -80) next();
+  }, [current, cards.length]);
 
   // Setup screen
   if (!generated) {
@@ -195,11 +217,11 @@ export default function Flashcards({ sessionId, subject: propSubject, hasMateria
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto max-w-lg space-y-6"
+      className="mx-auto max-w-lg flex flex-col min-h-[calc(100vh-10rem)] lg:min-h-0 lg:block space-y-5"
     >
       {/* Header with stats */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-text-primary">Flashcards</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Flashcards</h2>
         <div className="mt-2 flex items-center justify-center gap-4">
           <span className="text-xs text-text-dim">
             Card <span className="font-bold text-text-secondary">{current + 1}</span> of{" "}
@@ -233,101 +255,106 @@ export default function Flashcards({ sessionId, subject: propSubject, hasMateria
               setFlipped(false);
               setTimeout(() => setCurrent(i), 120);
             }}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === current
+            className={`h-2 rounded-full transition-all duration-300 ${i === current
                 ? "w-6 bg-accent-primary shadow-glow-sm"
                 : known.has(i)
-                ? "w-2 bg-status-success/60"
-                : "w-2 bg-border-secondary hover:bg-accent-primary/40"
-            }`}
+                  ? "w-2 bg-status-success/60"
+                  : "w-2 bg-border-secondary hover:bg-accent-primary/40"
+              }`}
           />
         ))}
       </div>
 
-      {/* Card with flip animation */}
-      <div
-        className="cursor-pointer select-none"
-        onClick={() => setFlipped(!flipped)}
-        style={{ perspective: "1200px" }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${current}-${flipped}`}
-            initial={{ rotateY: flipped ? -90 : 90, opacity: 0 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={{ rotateY: flipped ? 90 : -90, opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className={`relative min-h-[240px] overflow-hidden rounded-xl border p-8 transition-colors ${
-              flipped
-                ? "border-accent-primary/30 bg-accent-primary/[0.04]"
-                : "border-border-primary bg-bg-card"
-            }`}
-          >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-primary/40 to-transparent" />
+      {/* Card with flip + swipe */}
+      <div className="flex-1 lg:flex-none flex items-center justify-center">
+        <motion.div
+          className="cursor-pointer select-none w-full touch-pan-y"
+          onClick={() => setFlipped(!flipped)}
+          style={{ perspective: "1200px" }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.15}
+          onDragEnd={handleDragEnd}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${current}-${flipped}`}
+              initial={{ rotateY: flipped ? -90 : 90, opacity: 0 }}
+              animate={{ rotateY: 0, opacity: 1 }}
+              exit={{ rotateY: flipped ? 90 : -90, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              style={{ x: dragX, rotate: dragRotate, opacity: dragOpacity }}
+              className={`relative min-h-[220px] sm:min-h-[240px] overflow-hidden rounded-xl border p-6 sm:p-8 transition-colors ${flipped
+                  ? "border-accent-primary/30 bg-accent-primary/[0.04]"
+                  : "border-border-primary bg-bg-card"
+                }`}
+            >
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-primary/40 to-transparent" />
 
-            <div className="flex min-h-[180px] flex-col items-center justify-center">
-              <span className={`mb-4 rounded-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
-                flipped
-                  ? "bg-accent-primary/10 text-accent-secondary"
-                  : "bg-bg-elevated text-text-dim"
-              }`}>
-                {flipped ? "Answer" : "Question"}
-              </span>
-              <p className="text-center text-lg leading-relaxed text-text-primary">
-                {flipped ? card?.back : card?.front}
-              </p>
-            </div>
-
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-              <span className="text-[10px] text-text-dim">
-                {flipped ? "Click to see question" : "Click to reveal answer"}
-              </span>
-            </div>
-
-            {known.has(current) && (
-              <div className="absolute right-4 top-4">
-                <span className="rounded bg-status-success/10 px-1.5 py-0.5 text-[10px] text-status-success">Known</span>
+              <div className="flex min-h-[160px] sm:min-h-[180px] flex-col items-center justify-center">
+                <span className={`mb-4 rounded-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${flipped
+                    ? "bg-accent-primary/10 text-accent-secondary"
+                    : "bg-bg-elevated text-text-dim"
+                  }`}>
+                  {flipped ? "Answer" : "Question"}
+                </span>
+                <p className="text-center text-base sm:text-lg leading-relaxed text-text-primary">
+                  {flipped ? card?.back : card?.front}
+                </p>
               </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                <span className="text-[10px] text-text-dim">
+                  {flipped ? "Click to see question" : "Click to reveal answer"} · Swipe or use arrow keys
+                </span>
+              </div>
+
+              {known.has(current) && (
+                <div className="absolute right-4 top-4">
+                  <span className="rounded bg-status-success/10 px-1.5 py-0.5 text-[10px] text-status-success">Known</span>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={prev}
-          disabled={current === 0}
-          className="btn-secondary flex-1 disabled:opacity-30"
-        >
-          <svg className="mr-1 inline h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-          Prev
-        </button>
-        <button
-          onClick={() => toggleKnown(current)}
-          className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
-            known.has(current)
-              ? "border-status-success/30 bg-status-success/10 text-status-success"
-              : "border-border-secondary bg-bg-elevated text-text-secondary hover:border-status-success/30 hover:text-status-success"
-          }`}
-          title="Mark as known"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
-        </button>
-        <button
-          onClick={next}
-          disabled={current === cards.length - 1}
-          className="btn-primary flex-1 disabled:opacity-30"
-        >
-          Next
-          <svg className="ml-1 inline h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </button>
+      {/* Controls — bottom-aligned on mobile */}
+      <div className="mt-auto lg:mt-0 space-y-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={prev}
+            disabled={current === 0}
+            className="btn-secondary flex-1 disabled:opacity-30"
+          >
+            <svg className="mr-1 inline h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+            Prev
+          </button>
+          <button
+            onClick={() => toggleKnown(current)}
+            className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${known.has(current)
+                ? "border-status-success/30 bg-status-success/10 text-status-success"
+                : "border-border-secondary bg-bg-elevated text-text-secondary hover:border-status-success/30 hover:text-status-success"
+              }`}
+            title="Mark as known"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </button>
+          <button
+            onClick={next}
+            disabled={current === cards.length - 1}
+            className="btn-primary flex-1 disabled:opacity-30"
+          >
+            Next
+            <svg className="ml-1 inline h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-3">

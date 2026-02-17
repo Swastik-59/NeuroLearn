@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { generateExercise, submitExercise, Question, QuestionType } from "@/lib/api";
 import QuestionCard from "@/components/QuestionCard";
@@ -13,6 +13,19 @@ interface ExercisePageProps {
   level: string;
   onComplete: (newLevel: string) => void;
 }
+
+const ADAPTIVE_MODE_LABELS: Record<string, { label: string; color: string }> = {
+  fluency_training:      { label: "Fluency Training",      color: "text-sky-400 bg-sky-400/10 border-sky-400/20" },
+  concept_reinforcement: { label: "Concept Reinforcement", color: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
+  cognitive_overload:    { label: "Cognitive Overload",    color: "text-red-400 bg-red-400/10 border-red-400/20" },
+  standard:              { label: "Standard",               color: "text-text-secondary bg-bg-elevated border-border-primary" },
+};
+
+const STRESS_ACTION_MESSAGES: Record<string, string> = {
+  micro_break:             "Performance instability detected. Consider a short break before continuing.",
+  simplified_explanation:  "Performance instability detected. Review the lesson to reinforce core concepts.",
+  switch_to_review:        "Performance instability detected. Consider switching to review mode.",
+};
 
 export default function ExercisePage({ sessionId, subject, level, onComplete }: ExercisePageProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -27,9 +40,19 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
     new_level: string;
     level_changed: boolean;
     mastery: number;
+    adaptive_mode: string;
+    cognitive_strain_index: number;
+    avg_response_time: number;
+    stress_detected: boolean;
+    recommended_action: string | null;
   } | null>(null);
   const [error, setError] = useState("");
   const [started, setStarted] = useState(false);
+
+  // Timing state
+  const questionStartRef = useRef<number>(Date.now());
+  const [perQuestionTimes, setPerQuestionTimes] = useState<number[]>([]);
+  const sessionStartRef = useRef<number>(Date.now());
 
   const fetchQuestions = async (qType: QuestionType) => {
     setLoading(true);
@@ -38,6 +61,9 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
       const res = await generateExercise(sessionId, qType);
       setQuestions(res.questions);
       setAnswers(new Array(res.questions.length).fill(""));
+      setPerQuestionTimes([]);
+      questionStartRef.current = Date.now();
+      sessionStartRef.current = Date.now();
       setStarted(true);
     } catch {
       setError("Failed to generate exercises.");
@@ -46,17 +72,40 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
     }
   };
 
+  // Called when the user changes an answer — record time for that question slot
+  const handleAnswerChange = (index: number, val: string) => {
+    const now = Date.now();
+    const elapsed = (now - questionStartRef.current) / 1000;
+    questionStartRef.current = now;
+
+    setPerQuestionTimes((prev) => {
+      const updated = [...prev];
+      // Accumulate time per question index
+      updated[index] = (updated[index] ?? 0) + elapsed;
+      return updated;
+    });
+
+    setAnswers((prev) => {
+      const updated = [...prev];
+      updated[index] = val;
+      return updated;
+    });
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     setError("");
     try {
+      const totalTime = (Date.now() - sessionStartRef.current) / 1000;
       const payload = questions.map((q, i) => ({
         question: q.question,
         user_answer: answers[i],
         correct_answer: String(q.answer ?? ""),
         type: q.type || questionType,
       }));
-      const res = await submitExercise(sessionId, payload);
+      // Fill any unrecorded question times with 0
+      const times = questions.map((_, i) => perQuestionTimes[i] ?? 0);
+      const res = await submitExercise(sessionId, payload, times, totalTime);
       setResult(res);
     } catch {
       setError("Failed to submit exercises.");
@@ -87,7 +136,7 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-text-primary">Practice Exercises</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-text-primary">Practice Exercises</h2>
           <p className="mt-1 text-sm text-text-secondary">
             {subject} &middot; <span className="text-accent-secondary">{level}</span>
           </p>
@@ -163,6 +212,11 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
 
   if (result) {
     const levelUp = result.new_level === "Advanced" || (result.new_level === "Intermediate" && level === "Beginner");
+    const modeInfo = ADAPTIVE_MODE_LABELS[result.adaptive_mode] ?? ADAPTIVE_MODE_LABELS.standard;
+    const stressMessage = result.stress_detected && result.recommended_action
+      ? STRESS_ACTION_MESSAGES[result.recommended_action] ?? "Performance instability detected. Consider reviewing the material."
+      : null;
+
     return (
       <div className="mx-auto max-w-2xl">
         {/* Result header */}
@@ -183,12 +237,44 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
               </svg>
             )}
           </div>
-          <h2 className="mb-1 text-2xl font-bold text-text-primary">Exercise Results</h2>
+          <h2 className="mb-1 text-xl sm:text-2xl font-bold text-text-primary">Exercise Results</h2>
           <p className="text-sm text-text-secondary">
             {result.level_changed
               ? `Your level has been ${levelUp ? "raised" : "adjusted"} to ${result.new_level}`
               : `Holding steady at ${result.new_level}`}
           </p>
+        </motion.div>
+
+        {/* Stress alert — non-intrusive banner */}
+        {stressMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-5 flex items-start gap-3 rounded-xl border border-amber-400/25 bg-amber-400/8 px-4 py-3"
+          >
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <p className="text-xs text-amber-400">{stressMessage}</p>
+          </motion.div>
+        )}
+
+        {/* Adaptive mode badge */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mb-4 flex items-center gap-2"
+        >
+          <span className="text-xs text-text-muted">Adaptive mode:</span>
+          <span className={`rounded-lg border px-2.5 py-0.5 text-xs font-medium ${modeInfo.color}`}>
+            {modeInfo.label}
+          </span>
+          {result.avg_response_time > 0 && (
+            <span className="ml-auto text-xs text-text-muted">
+              Avg {result.avg_response_time}s / question
+            </span>
+          )}
         </motion.div>
 
         {/* Score card */}
@@ -200,10 +286,10 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
         >
           <div className="h-px bg-gradient-to-r from-transparent via-accent-primary/50 to-transparent" />
           <div className="p-6">
-            <div className="mb-5 flex items-center justify-between">
+            <div className="mb-5 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-5">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-text-primary">{result.accuracy}%</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-text-primary">{result.accuracy}%</p>
                   <p className="text-[10px] uppercase tracking-widest text-text-dim">Accuracy</p>
                 </div>
                 <div className="h-10 w-px bg-border-primary" />
@@ -225,6 +311,14 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
 
             <div className="mt-4">
               <ProgressBar value={result.mastery} label="Mastery" />
+            </div>
+
+            {/* Cognitive strain index */}
+            <div className="mt-4">
+              <ProgressBar
+                value={result.cognitive_strain_index}
+                label={`Cognitive Strain Index`}
+              />
             </div>
 
             {result.level_changed && (
@@ -281,7 +375,7 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
         </motion.div>
 
         <div className="mt-8 flex justify-center">
-          <button onClick={() => onComplete(result.new_level)} className="btn-primary flex items-center gap-2">
+          <button onClick={() => onComplete(result.new_level)} className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2">
             View Progress
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -335,20 +429,16 @@ export default function ExercisePage({ sessionId, subject, level, onComplete }: 
             options={q.options}
             expectedPoints={q.expected_points}
             userAnswer={answers[i]}
-            onChange={(val) => {
-              const updated = [...answers];
-              updated[i] = val;
-              setAnswers(updated);
-            }}
+            onChange={(val) => handleAnswerChange(i, val)}
           />
         ))}
       </div>
 
-      <div className="mt-8 flex justify-end">
+      <div className="mt-8 sticky bottom-20 lg:bottom-0 z-30 bg-bg-primary/80 backdrop-blur-sm py-3 -mx-4 px-4 sm:mx-0 sm:px-0 sm:static sm:bg-transparent sm:backdrop-blur-none">
         <button
           onClick={handleSubmit}
           disabled={submitting || filledCount === 0}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-2"
         >
           {submitting ? (
             <>
