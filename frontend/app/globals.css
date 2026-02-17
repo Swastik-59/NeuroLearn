@@ -4,6 +4,103 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
+/* ── Theme custom properties ── */
+:root {
+  --bg-primary: #f8f9fc;
+  --bg-secondary: #f0f1f5;
+  --bg-card: #ffffff;
+  --bg-elevated: #f4f5f9;
+  --bg-hover: #ecedf3;
+  --bg-input: #ffffff;
+
+  --accent-primary: #7c3aed;
+  --accent-secondary: #8b5cf6;
+  --accent-muted: #6d28d9;
+  --accent-glow: rgba(124, 58, 237, 0.12);
+  --accent-cyan: #0891b2;
+  --accent-teal: #0d9488;
+
+  --text-primary: #1e1b4b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+
+  --border-primary: #e2e4ea;
+  --border-secondary: #d1d5db;
+  --border-hover: #c4c8d0;
+  --border-focus: #7c3aed;
+  --border-glow: rgba(124, 58, 237, 0.25);
+
+  --status-success: #059669;
+  --status-warning: #d97706;
+  --status-error: #dc2626;
+  --status-info: #2563eb;
+
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.06);
+
+  --glow-sm: 0 0 15px rgba(124, 58, 237, 0.12);
+  --glow-md: 0 0 30px rgba(124, 58, 237, 0.16);
+
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: #d1d5db;
+  --scrollbar-hover: #b4b9c2;
+
+  --selection-bg: rgba(124, 58, 237, 0.2);
+  --selection-text: #1e1b4b;
+
+  --noise-opacity: 0.02;
+  --grid-opacity: 0.5;
+}
+
+.dark {
+  --bg-primary: #06060a;
+  --bg-secondary: #0c0c14;
+  --bg-card: #111119;
+  --bg-elevated: #16161f;
+  --bg-hover: #1c1c28;
+  --bg-input: #0e0e16;
+
+  --accent-primary: #7c3aed;
+  --accent-secondary: #a78bfa;
+  --accent-muted: #6d28d9;
+  --accent-glow: rgba(124, 58, 237, 0.15);
+  --accent-cyan: #06b6d4;
+  --accent-teal: #14b8a6;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-dim: #475569;
+
+  --border-primary: #1e1e2e;
+  --border-secondary: #2a2a3e;
+  --border-hover: #35354a;
+  --border-focus: #7c3aed;
+  --border-glow: rgba(124, 58, 237, 0.3);
+
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+
+  --glass-bg: rgba(17, 17, 25, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.05);
+
+  --glow-sm: 0 0 15px rgba(124, 58, 237, 0.15);
+  --glow-md: 0 0 30px rgba(124, 58, 237, 0.2);
+
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: #1e1e2e;
+  --scrollbar-hover: #2a2a3e;
+
+  --selection-bg: rgba(124, 58, 237, 0.35);
+  --selection-text: #f1f5f9;
+
+  --noise-opacity: 0.015;
+  --grid-opacity: 0.4;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -15,16 +112,16 @@ html {
 }
 
 body {
-  background-color: #06060a;
-  color: #f1f5f9;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-  background-color: rgba(124, 58, 237, 0.35);
-  color: #f1f5f9;
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
 }
 
 ::-webkit-scrollbar {
@@ -32,16 +129,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e1e2e;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a2a3e;
+  background: var(--scrollbar-hover);
 }
 
 @layer base {
@@ -58,11 +155,15 @@ body {
   }
 
   .btn-primary {
-    @apply relative overflow-hidden rounded-xl bg-accent-primary px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-accent-muted hover:shadow-glow-sm active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
+    @apply relative overflow-hidden rounded-xl bg-accent-primary px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-accent-muted hover:shadow-glow-md active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .btn-secondary {
-    @apply rounded-xl border border-border-secondary bg-bg-elevated px-6 py-3 text-sm font-medium text-text-secondary transition-all duration-300 hover:border-border-focus/30 hover:bg-bg-hover hover:text-text-primary;
+    @apply rounded-xl border border-border-secondary bg-bg-elevated px-6 py-3 text-sm font-medium text-text-secondary transition-all duration-300 hover:border-border-hover hover:bg-bg-hover hover:text-text-primary hover:shadow-glow-sm;
+  }
+
+  .btn-nav {
+    @apply flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all duration-300;
   }
 
   .gradient-text {
@@ -70,11 +171,31 @@ body {
   }
 
   .loading-spinner {
-    @apply h-5 w-5 animate-spin rounded-full border-2 border-accent-primary/30 border-t-accent-secondary;
+    @apply h-5 w-5 animate-spin rounded-full border-2 border-accent-glow border-t-accent-secondary;
   }
 }
 
-/* ── Custom Cursor ── */
+/* ── Navbar button styles ── */
+.btn-nav--default {
+  border-color: var(--border-primary);
+  background-color: var(--bg-card);
+  color: var(--text-dim);
+}
+
+.btn-nav--default:hover {
+  color: var(--text-secondary);
+  border-color: rgba(124, 58, 237, 0.3);
+  box-shadow: 0 0 14px rgba(124, 58, 237, 0.12);
+}
+
+.btn-nav--active {
+  border-color: rgba(124, 58, 237, 0.4);
+  background-color: rgba(124, 58, 237, 0.1);
+  color: var(--accent-secondary);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.15);
+}
+
+/* ── Custom cursor (fine pointer only) ── */
 @media (pointer: fine) {
   body {
     cursor: none;
@@ -101,7 +222,6 @@ body {
   pointer-events: none;
   z-index: 9999;
   mix-blend-mode: difference;
-  transition: width 0.2s ease, height 0.2s ease, background 0.2s ease;
 }
 
 .cursor-dot.is-hovering {
@@ -121,11 +241,76 @@ body {
   pointer-events: none;
   z-index: 9998;
   mix-blend-mode: difference;
-  transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease;
 }
 
 .cursor-ring.is-hovering {
   width: 52px;
   height: 52px;
   border-color: rgba(196, 181, 253, 0.5);
+}
+
+/* ── Custom range slider ── */
+input[type="range"].sound-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-cyan));
+  outline: none;
+  opacity: 0.85;
+}
+
+input[type="range"].sound-slider:hover {
+  opacity: 1;
+}
+
+input[type="range"].sound-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background: var(--accent-secondary);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
+}
+
+input[type="range"].sound-slider::-moz-range-thumb {
+  height: 14px;
+  width: 14px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-secondary);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
+}
+
+/* ── Glow keyframe for playing state ── */
+@keyframes glow-ring {
+
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(124, 58, 237, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 16px rgba(124, 58, 237, 0.4), 0 0 4px rgba(124, 58, 237, 0.2);
+  }
+}
+
+.animate-glow-ring {
+  animation: glow-ring 2s ease-in-out infinite;
+}
+
+/* ── Shimmer animation for gradient text ── */
+@keyframes text-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-text-shimmer {
+  background-size: 200% auto;
+  animation: text-shimmer 4s linear infinite;
 }

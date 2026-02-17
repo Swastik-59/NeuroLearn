@@ -12,6 +12,7 @@ import MaterialUpload from "./material-upload";
 import PodcastPage from "./podcast";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
 import WellnessCoach from "@/components/WellnessCoach";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export type Step = "select" | "quiz" | "lesson" | "exercise" | "dashboard" | "flashcards" | "upload" | "podcast";
 
@@ -59,38 +60,39 @@ export default function Home() {
     step === "lesson" || step === "dashboard" || step === "flashcards" || step === "upload"
       ? "reading"
       : step === "podcast"
-      ? "podcast"
-      : step === "quiz" || step === "exercise"
-      ? "speaking"
-      : "neutral";
+        ? "podcast"
+        : step === "quiz" || step === "exercise"
+          ? "speaking"
+          : "neutral";
 
   return (
     <main className="relative min-h-screen bg-bg-primary">
       {/* Background effects */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-40" />
+        <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-[var(--grid-opacity)]" />
         <div className="absolute -top-[300px] left-1/2 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-gradient-radial from-accent-primary/[0.07] to-transparent" />
         <div className="absolute -bottom-[200px] -left-[200px] h-[500px] w-[500px] rounded-full bg-gradient-radial from-accent-cyan/[0.04] to-transparent" />
         <div className="absolute -bottom-[200px] -right-[200px] h-[500px] w-[500px] rounded-full bg-gradient-radial from-accent-primary/[0.04] to-transparent" />
-        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")" }} />
+        <div className="absolute inset-0" style={{ opacity: "var(--noise-opacity)", backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")" }} />
       </div>
 
       {/* Header */}
-      <header className="relative z-20 border-b border-border-primary/50 bg-bg-primary/60 backdrop-blur-xl">
+      <header className="relative z-20 border-b border-border-primary/50 bg-bg-primary/60 backdrop-blur-xl transition-colors duration-300">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
+          {/* Logo */}
           <button
             onClick={() => {
               setStep("select");
               setAppState({ sessionId: "", subject: "", level: "unknown", hasMaterial: false });
             }}
-            className="group flex items-center gap-2.5 transition-colors"
+            className="group flex items-center gap-2.5 transition-all"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-primary/10 transition-all group-hover:bg-accent-primary/15 group-hover:shadow-glow-sm">
-              <svg className="h-4.5 w-4.5 text-accent-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-primary/10 transition-all duration-300 group-hover:bg-accent-primary/20 group-hover:shadow-glow-sm group-hover:scale-110">
+              <svg className="h-4.5 w-4.5 text-accent-secondary transition-transform duration-300 group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342" />
               </svg>
             </div>
-            <span className="text-base font-bold tracking-tight text-text-primary group-hover:text-accent-secondary transition-colors">
+            <span className="text-base font-bold tracking-tight gradient-text animate-text-shimmer transition-all">
               NeuroLearn
             </span>
           </button>
@@ -102,20 +104,18 @@ export default function Home() {
                 const isPast = currentIndex > i;
                 return (
                   <div key={s} className="flex items-center">
-                    <div className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                      isActive
-                        ? "bg-accent-primary/12 text-accent-secondary"
-                        : isPast
+                    <div className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 ${isActive
+                      ? "bg-accent-primary/12 text-accent-secondary"
+                      : isPast
                         ? "text-text-secondary"
                         : "text-text-dim"
-                    }`}>
-                      <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-full text-[9px] font-bold ${
-                        isActive
-                          ? "bg-accent-primary text-white"
-                          : isPast
+                      }`}>
+                      <span className={`flex h-4.5 w-4.5 items-center justify-center rounded-full text-[9px] font-bold transition-all duration-300 ${isActive
+                        ? "bg-accent-primary text-white shadow-glow-sm"
+                        : isPast
                           ? "bg-accent-primary/20 text-accent-secondary"
                           : "bg-border-primary text-text-dim"
-                      }`}>
+                        }`}>
                         {isPast ? (
                           <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -127,7 +127,7 @@ export default function Home() {
                       <span className="hidden sm:inline">{STEP_LABELS[s]}</span>
                     </div>
                     {i < coreSteps.length - 1 && (
-                      <div className={`mx-0.5 h-px w-4 ${isPast ? "bg-accent-primary/30" : "bg-border-primary"}`} />
+                      <div className={`mx-0.5 h-px w-4 transition-colors duration-300 ${isPast ? "bg-accent-primary/30" : "bg-border-primary"}`} />
                     )}
                   </div>
                 );
@@ -138,20 +138,20 @@ export default function Home() {
           {appState.subject && (
             <div className="hidden sm:flex items-center gap-2">
               {/* Current subject badge */}
-              <div className="flex items-center gap-2 rounded-lg border border-border-primary bg-bg-card px-3 py-1.5">
+              <div className="flex items-center gap-2 rounded-lg border border-border-primary bg-bg-card px-3 py-1.5 transition-colors duration-300">
                 <span className="text-xs text-text-dim">Subject:</span>
                 <span className="text-xs font-medium text-text-secondary">{appState.subject}</span>
               </div>
             </div>
           )}
 
-          {/* Quick-access: Upload, Flashcards, Podcast + Zen sound */}
+          {/* Quick-access: Upload, Flashcards, Podcast + Zen sound + Theme Toggle */}
           <div className="flex items-center gap-2">
             <SoundscapePlayer mode={soundMode} />
 
             <button
               onClick={() => setWellnessOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-border-primary bg-bg-card px-2.5 py-1.5 text-xs font-medium text-text-dim transition-all hover:text-text-secondary hover:border-border-hover"
+              className="btn-nav btn-nav--default"
               title="Wellness Coach"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -162,11 +162,8 @@ export default function Home() {
 
             <button
               onClick={() => navigate("upload")}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
-                step === "upload"
-                  ? "border-accent-primary/40 bg-accent-primary/10 text-accent-secondary"
-                  : "border-border-primary bg-bg-card text-text-dim hover:text-text-secondary hover:border-border-hover"
-              }`}
+              className={`btn-nav ${step === "upload" ? "btn-nav--active" : "btn-nav--default"
+                }`}
               title="Upload PDF / PPTX"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -177,11 +174,8 @@ export default function Home() {
 
             <button
               onClick={() => navigate("flashcards")}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
-                step === "flashcards"
-                  ? "border-accent-primary/40 bg-accent-primary/10 text-accent-secondary"
-                  : "border-border-primary bg-bg-card text-text-dim hover:text-text-secondary hover:border-border-hover"
-              }`}
+              className={`btn-nav ${step === "flashcards" ? "btn-nav--active" : "btn-nav--default"
+                }`}
               title="Flashcards"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -192,11 +186,8 @@ export default function Home() {
 
             <button
               onClick={() => navigate("podcast")}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
-                step === "podcast"
-                  ? "border-accent-primary/40 bg-accent-primary/10 text-accent-secondary"
-                  : "border-border-primary bg-bg-card text-text-dim hover:text-text-secondary hover:border-border-hover"
-              }`}
+              className={`btn-nav ${step === "podcast" ? "btn-nav--active" : "btn-nav--default"
+                }`}
               title="AI Podcast"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -204,6 +195,8 @@ export default function Home() {
               </svg>
               Podcast
             </button>
+
+            <ThemeToggle />
           </div>
         </div>
       </header>

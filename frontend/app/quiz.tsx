@@ -228,32 +228,28 @@ export default function SubjectSelect({ onStart }: SubjectSelectProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.12 + i * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={() => setSelected(subject.id)}
-            className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all duration-300 ${
-              selected === subject.id
-                ? "border-accent-primary/50 bg-accent-primary/[0.06] ring-1 ring-accent-primary/20 shadow-glow-sm"
-                : `border-border-primary bg-bg-card ${subject.borderHover} hover:bg-bg-elevated`
-            }`}
+            className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all duration-300 ${selected === subject.id
+                ? "border-accent-primary/50 bg-accent-primary/[0.06] ring-1 ring-accent-primary/20 shadow-glow-sm scale-[1.01]"
+                : `border-border-primary bg-bg-card ${subject.borderHover} hover:bg-bg-elevated hover:shadow-glow-sm hover:scale-[1.02] hover:-translate-y-0.5`
+              }`}
           >
             {/* Gradient overlay on select */}
-            <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${subject.color} opacity-0 transition-opacity duration-300 ${
-              selected === subject.id ? "opacity-100" : "group-hover:opacity-50"
-            }`} />
+            <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${subject.color} opacity-0 transition-opacity duration-300 ${selected === subject.id ? "opacity-100" : "group-hover:opacity-50"
+              }`} />
 
             {/* Top shimmer line */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
 
             <div className="relative flex items-start gap-3">
-              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-all duration-300 ${
-                selected === subject.id
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-all duration-300 ${selected === subject.id
                   ? `border-transparent bg-white/[0.08] ${subject.iconActive}`
                   : "border-border-primary bg-bg-secondary text-text-dim group-hover:text-text-secondary group-hover:border-border-secondary"
-              }`}>
+                }`}>
                 {subject.icon}
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className={`text-sm font-semibold transition-colors ${
-                  selected === subject.id ? "text-text-primary" : "text-text-primary/90"
-                }`}>
+                <h3 className={`text-sm font-semibold transition-colors ${selected === subject.id ? "text-text-primary" : "text-text-primary/90"
+                  }`}>
                   {subject.label}
                 </h3>
                 <p className="mt-0.5 text-xs text-text-muted line-clamp-1">{subject.description}</p>
