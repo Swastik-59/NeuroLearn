@@ -11,6 +11,7 @@ import Flashcards from "./flashcards";
 import MaterialUpload from "./material-upload";
 import PodcastPage from "./podcast";
 import SoundscapePlayer from "@/components/SoundscapePlayer";
+import WellnessCoach from "@/components/WellnessCoach";
 
 export type Step = "select" | "quiz" | "lesson" | "exercise" | "dashboard" | "flashcards" | "upload" | "podcast";
 
@@ -45,6 +46,7 @@ export default function Home() {
     level: "unknown",
     hasMaterial: false,
   });
+  const [wellnessOpen, setWellnessOpen] = useState(false);
 
   const navigate = (to: Step) => {
     setPrevStep(step);
@@ -146,6 +148,17 @@ export default function Home() {
           {/* Quick-access: Upload, Flashcards, Podcast + Zen sound */}
           <div className="flex items-center gap-2">
             <SoundscapePlayer mode={soundMode} />
+
+            <button
+              onClick={() => setWellnessOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-border-primary bg-bg-card px-2.5 py-1.5 text-xs font-medium text-text-dim transition-all hover:text-text-secondary hover:border-border-hover"
+              title="Wellness Coach"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 8.25h-4.5m8.25 0A2.25 2.25 0 0120.25 10.5v8.25A2.25 2.25 0 0118 21H6a2.25 2.25 0 01-2.25-2.25V10.5A2.25 2.25 0 016 8.25m12 0V6A2.25 2.25 0 0015.75 3.75h-7.5A2.25 2.25 0 006 6v2.25m12 0h-12" />
+              </svg>
+              Wellness
+            </button>
 
             <button
               onClick={() => navigate("upload")}
@@ -287,6 +300,8 @@ export default function Home() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <WellnessCoach open={wellnessOpen} onClose={() => setWellnessOpen(false)} />
     </main>
   );
 }

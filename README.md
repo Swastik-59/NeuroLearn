@@ -1,355 +1,335 @@
 <div align="center">
 
-# 🧠 NeuroLearn
+# 🧠⚡ NeuroLearn
+### **Adaptive AI Learning OS + Wellness Intelligence Layer**
 
-### Adaptive Personalized Learning Tutor
-
-An AI-powered learning platform that adapts to each student's level in real time.
-Upload your study material, take diagnostics, get personalised lessons and exercises,
-track mastery with an analytics dashboard, and revise with smart flashcards.
+> A full-stack, real-time personalized learning platform that fuses **adaptive tutoring**, **RAG from your own notes**, **multimodal revision**, and **camera-assisted wellness routines**.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)](https://www.mongodb.com/atlas)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb)](https://www.mongodb.com/atlas)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 
 </div>
 
 ---
 
-## ✨ Features
+## 🌌 Vision
+NeuroLearn is built as a **learning control system**:
 
-| Category | Details |
-|---|---|
-| **Adaptive Engine** | Bayesian-style scoring adjusts difficulty level (Beginner → Intermediate → Advanced) after every exercise |
-| **Diagnostic Assessment** | Choose question format (MCQ / True-False / Short Answer / Descriptive / Mixed) and get placed at the right level |
-| **AI-Generated Lessons** | Structured markdown lessons tailored to the student's current level |
-| **Smart Exercises** | 5 question types with instant grading and detailed feedback |
-| **PDF / PPTX Upload + RAG** | Upload study material → sentence-aware chunking → TF-IDF retrieval → generate lessons & quizzes from *your* content |
-| **Flashcard System** | AI-generated flashcards with flip animation, known/remaining tracking, and progress bar |
-| **Mastery Dashboard** | Live accuracy, level history, topic heatmap, weakness analysis, and recommendations |
-| **Dual AI Provider** | Toggle between **Google Gemini** (cloud) and **Ollama / Mistral** (local) with a single env var |
-| **Dark Glassmorphism UI** | Polished dark theme with frosted glass cards, gradient accents, and Framer Motion animations |
+- 🧭 **Diagnose** current skill state
+- 🎯 **Adapt** content difficulty dynamically
+- 🧱 **Ground** generation in your own material (PDF/PPTX)
+- 🔁 **Reinforce** with flashcards and targeted practice
+- 📊 **Track** mastery and weaknesses over time
+- 🧘 **Regulate** stress with built-in soundscapes + guided wellness
 
 ---
 
-## 🏗️ Tech Stack
+## ✨ Feature Matrix
+
+| Module | Capability |
+|---|---|
+| 🧠 Adaptive Engine | Score-based level placement (Beginner / Intermediate / Advanced) + post-exercise level shifts |
+| 📝 Diagnostics | MCQ, True/False, Short, QA, Mixed generation + scoring |
+| 📚 Lesson Generator | Contextual lesson creation based on subject + level |
+| 🧪 Exercise Generator | Level-aware practice generation in structured JSON formats |
+| 📂 RAG Pipeline | PDF/PPTX extraction, sentence-aware chunking, TF-IDF retrieval, grounded generation |
+| 🃏 Flashcards | Curriculum-based or material-based card generation with normalization |
+| 📈 Dashboard | Accuracy, mastery score, level history, weakness detection, recommendations |
+| 🎙️ Podcast Mode | Two-speaker educational podcast script + optional ElevenLabs voice synthesis |
+| 🎧 Zen Soundscapes | Rain / Forest / Ocean / Brown Noise / Lo-fi with smart fade behavior |
+| 🧘 Wellness Coach | Camera-tracked neck-release trainer + breathing cycles + red-dot eye exercise |
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart LR
+  A["🖥️ Next.js Frontend"] --> B["⚡ FastAPI Backend"]
+  B --> C["🗄️ MongoDB Atlas"]
+  B --> D["🤖 Gemini / Ollama"]
+  B --> E["📚 RAG Engine (TF-IDF)"]
+  B --> F["🎙️ ElevenLabs (Optional)"]
+  A --> G["📷 MediaPipe Wellness Tracking"]
+  A --> H["🎧 Local Soundscape Assets"]
+```
+
+---
+
+## 🧱 Tech Stack (Complete)
 
 ### Backend
-
-| Technology | Purpose |
-|---|---|
-| **FastAPI 0.110** | Async REST API framework |
-| **MongoDB Atlas** (motor ≥ 3.6) | Cloud NoSQL database for sessions, scores, and progress |
-| **Google Generative AI** (google-genai) | Gemini 2.5 Flash — lesson, quiz, and flashcard generation |
-| **Ollama + Mistral** (httpx ≥ 0.27) | Local LLM fallback for offline / token-saving development |
-| **scikit-learn** | TF-IDF vectorizer + cosine similarity for RAG retrieval |
-| **PyPDF2** | PDF text extraction |
-| **python-pptx** | PowerPoint text extraction |
-| **Pydantic** | Request / response validation |
-| **certifi** | SSL CA bundle for MongoDB Atlas TLS |
+- **FastAPI 0.110**: API framework + async routes
+- **Uvicorn**: ASGI runtime
+- **Pydantic v2**: schema validation
+- **Motor + PyMongo**: async MongoDB access
+- **Google GenAI (`google-genai`)**: Gemini provider
+- **httpx**: Ollama + external API calls
+- **scikit-learn + numpy**: TF-IDF vector retrieval
+- **PyPDF2**: PDF text extraction
+- **python-pptx**: PPTX parsing (including table text)
+- **python-multipart**: file upload handling
+- **certifi**: TLS CA bundle for Atlas
 
 ### Frontend
-
-| Technology | Purpose |
-|---|---|
-| **Next.js 14** (App Router) | React framework with SSR/SSG support |
-| **TailwindCSS 3.4** | Utility-first CSS with custom dark theme |
-| **Framer Motion 11** | Page transitions, flip animations, staggered reveals |
-| **Axios** | HTTP client with 120 s timeout |
-| **Lenis** | Smooth scrolling |
+- **Next.js 14 (App Router)**
+- **React 18 + TypeScript**
+- **TailwindCSS 3.4**
+- **Framer Motion 11**
+- **Axios**
+- **Lenis**
+- **MediaPipe Tasks Vision (`@mediapipe/tasks-vision`)** for camera-tracked exercise detection
 
 ---
 
-## 📁 Project Structure
+## 📁 Repository Layout
 
-```
+```text
 NeuroLearn/
 ├── README.md
 ├── backend/
-│   ├── .env                    # Environment variables (see below)
-│   ├── main.py                 # FastAPI app, CORS, lifespan
-│   ├── routes.py               # All 10 API endpoints
-│   ├── models.py               # LEVELS & SUBJECTS constants
-│   ├── schemas.py              # Pydantic request / response models
-│   ├── database.py             # MongoDB Atlas connection (motor + certifi)
-│   ├── gemini_client.py        # Dual AI provider (Gemini / Ollama)
-│   ├── adaptive_engine.py      # Diagnostic scoring & level adjustment
-│   ├── performance_tracker.py  # Per-topic / per-type mastery tracking
-│   ├── flashcard_engine.py     # Flashcard prompt builder
-│   ├── material_rag.py         # RAG pipeline: extract → chunk → store → retrieve
-│   └── requirements.txt        # Python dependencies
+│   ├── main.py                  # App bootstrap + lifespan + CORS
+│   ├── routes.py                # Core API endpoints
+│   ├── schemas.py               # Pydantic contracts
+│   ├── models.py                # Subject + level constants
+│   ├── database.py              # MongoDB connection + session persistence
+│   ├── adaptive_engine.py       # Level calculation + prompt templates
+│   ├── performance_tracker.py   # Mastery + weakness analytics
+│   ├── gemini_client.py         # Gemini/Ollama provider abstraction
+│   ├── material_rag.py          # Extraction, chunking, vector retrieval
+│   ├── flashcard_engine.py      # Flashcard prompt construction
+│   ├── podcast_engine.py        # Script + optional TTS generation
+│   └── requirements.txt
 └── frontend/
     ├── app/
-    │   ├── page.tsx             # Root orchestrator (step navigation)
-    │   ├── layout.tsx           # HTML layout + global font
-    │   ├── globals.css          # Tailwind layers + custom styles
-    │   ├── diagnostic.tsx       # Diagnostic assessment + type selector
-    │   ├── quiz.tsx             # Initial placement quiz
-    │   ├── lesson.tsx           # AI-generated lesson viewer
-    │   ├── exercise.tsx         # Practice questions + grading
-    │   ├── dashboard.tsx        # Mastery analytics dashboard
-    │   ├── flashcards.tsx       # Flashcard system with flip UI
-    │   └── material-upload.tsx  # Drag-and-drop file upload + RAG Q&A
-    ├── components/              # Shared UI components
-    ├── lib/                     # Utility functions
-    ├── tailwind.config.js
-    ├── next.config.js
+    │   ├── page.tsx             # Main orchestration + nav + utilities
+    │   ├── diagnostic.tsx
+    │   ├── lesson.tsx
+    │   ├── exercise.tsx
+    │   ├── dashboard.tsx
+    │   ├── flashcards.tsx
+    │   ├── material-upload.tsx
+    │   └── podcast.tsx
+    ├── components/
+    │   ├── SoundscapePlayer.tsx
+    │   ├── WellnessCoach.tsx
+    │   ├── QuestionCard.tsx
+    │   ├── ProgressBar.tsx
+    │   └── DifficultyBadge.tsx
+    ├── lib/
+    │   └── api.ts               # frontend API client
+    ├── public/
+    │   └── soundscapes/         # bundled focus audio assets
     └── package.json
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
+### 0) Prerequisites
+- Python `>=3.10`
+- Node.js `>=18`
+- npm
+- MongoDB Atlas cluster
+- Gemini API key (if `IS_GEMINI=true`)
 
-- **Python 3.10+**
-- **Node.js 18+** and npm
-- **MongoDB Atlas** cluster (free M0 tier works)
-- **Google Gemini API key** — [get one free](https://aistudio.google.com/apikey)
-- *(Optional)* **Ollama** installed locally with Mistral model pulled
-
-### 1. Clone the Repository
+### 1) Clone
 
 ```bash
 git clone https://github.com/<your-username>/NeuroLearn.git
 cd NeuroLearn
 ```
 
-### 2. Backend Setup
+### 2) Backend
 
 ```bash
 cd backend
-
-# Create & activate virtual environment
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
-pip install certifi           # Required for MongoDB Atlas TLS
 ```
 
-Create a `.env` file in `backend/`:
+Create `backend/.env`:
 
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
-MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/?appName=Cluster0
+GEMINI_API_KEY=your_gemini_api_key
+MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+MONGO_DB=neurolearn
 IS_GEMINI=true
 OLLAMA_MODEL=mistral
+
+# Optional podcast audio synthesis
+ELEVENLABS_API_KEY=
+ELEVENLABS_MODEL=eleven_multilingual_v2
+ELEVENLABS_HOST_VOICE=pNInz6obpgDQGcFmaJgB
+ELEVENLABS_GUEST_VOICE=21m00Tcm4TlvDq8ikWAM
 ```
 
-| Variable | Description | Default |
-|---|---|---|
-| `GEMINI_API_KEY` | Google Generative AI API key | *(required when IS_GEMINI=true)* |
-| `MONGO_URI` | MongoDB Atlas connection string | *(required)* |
-| `IS_GEMINI` | `true` = use Gemini API, `false` = use local Ollama | `true` |
-| `OLLAMA_MODEL` | Ollama model name when IS_GEMINI=false | `mistral` |
-
-> **Important:** Add your machine's IP to the MongoDB Atlas Network Access whitelist, or use `0.0.0.0/0` for development.
-
-Start the backend:
+Run backend:
 
 ```bash
 uvicorn main:app --reload --port 8000
 ```
 
-### 3. Frontend Setup
+### 3) Frontend
 
 ```bash
 cd ../frontend
-
 npm install
-npm run dev          # Starts on http://localhost:3000
+npm run dev
 ```
 
-### 4. (Optional) Ollama Local Mode
-
-To save Gemini API tokens during development, use the local Ollama provider:
-
-```bash
-# Install Ollama: https://ollama.ai
-ollama pull mistral
-
-# In backend/.env, set:
-IS_GEMINI=false
-OLLAMA_MODEL=mistral
-```
-
-Restart the backend server. All AI calls will now go to Ollama on `localhost:11434`.
+Open:
+- 🌐 Frontend: `http://localhost:3000`
+- 🧪 API docs: `http://localhost:8000/docs`
 
 ---
 
-## 📡 API Endpoints
+## 🔐 Environment Variables (Reference)
 
-| Method | Endpoint | Description |
+| Key | Required | Notes |
 |---|---|---|
-| `POST` | `/api/start-session` | Create a new learning session for a subject |
-| `POST` | `/api/generate-diagnostic` | Generate diagnostic quiz (configurable question type) |
-| `POST` | `/api/submit-diagnostic` | Submit answers and determine initial level |
-| `POST` | `/api/generate-lesson` | Generate an AI lesson for the current level |
-| `POST` | `/api/generate-exercise` | Generate practice questions (MCQ/TF/Short/QA/Mixed) |
-| `POST` | `/api/submit-exercise` | Grade exercise, update level and mastery |
-| `GET`  | `/api/progress/{sid}` | Get full progress analytics for a session |
-| `POST` | `/api/upload-material` | Upload PDF/PPTX for RAG (multipart form) |
-| `POST` | `/api/generate-from-material` | Generate lesson or quiz from uploaded material |
-| `POST` | `/api/generate-flashcards` | Generate flashcards (from curriculum or uploaded material) |
+| `GEMINI_API_KEY` | when `IS_GEMINI=true` | Gemini API key |
+| `MONGO_URI` | yes | Atlas connection string |
+| `MONGO_DB` | no | defaults to `neurolearn` |
+| `IS_GEMINI` | no | `true` => Gemini, `false` => Ollama |
+| `OLLAMA_MODEL` | no | used when Gemini is off |
+| `ELEVENLABS_API_KEY` | optional | enables podcast audio |
+| `ELEVENLABS_MODEL` | optional | TTS model id |
+| `ELEVENLABS_HOST_VOICE` | optional | host voice id |
+| `ELEVENLABS_GUEST_VOICE` | optional | guest voice id |
+
+> ✅ Atlas setup checklist: DB user created, cluster running, IP whitelisted.
 
 ---
 
-## 🔄 How the Adaptive Engine Works
+## 📡 API Surface
 
-```
-┌──────────────┐       ┌───────────────┐       ┌──────────────┐
-│  Diagnostic  │──────▶│  Level Placed │──────▶│   Lesson     │
-│  Assessment  │       │  (B / I / A)  │       │  Generated   │
-└──────────────┘       └───────────────┘       └──────┬───────┘
-                                                      │
-                              ┌────────────────────────┘
-                              ▼
-                       ┌──────────────┐       ┌──────────────┐
-                       │   Exercise   │──────▶│  Grading &   │
-                       │   Practice   │       │  Level Adj.  │
-                       └──────────────┘       └──────┬───────┘
-                              ▲                      │
-                              └──────────────────────┘
-                                (loop until mastery)
-```
-
-1. **Diagnostic** → Bayesian-style scoring places the student at Beginner, Intermediate, or Advanced
-2. **Lesson** → AI generates a structured lesson tailored to the placed level
-3. **Exercise** → 5 questions at the current difficulty; answers are graded
-4. **Level Adjustment** → If accuracy ≥ 80%: level up · If accuracy ≤ 40%: level down · Otherwise: stay
-5. **Mastery** → Exponential moving average of accuracy across all attempts
-6. **Repeat** → New lesson + exercise at the updated level until the student masters the topic
-
----
-
-## 📄 RAG Pipeline (PDF / PPTX Upload)
-
-```
- Upload          Extract         Clean           Chunk
-┌──────┐  ───▶  ┌──────┐  ───▶  ┌──────┐  ───▶  ┌──────────────┐
-│ PDF  │        │ Text │        │ Norm │        │ Sentence-    │
-│ PPTX │        │      │        │      │        │ aware splits │
-└──────┘        └──────┘        └──────┘        └──────┬───────┘
-                                                       │
-                 Retrieve          Store (TF-IDF)       │
-                ┌──────────┐  ◀──  ┌──────────────┐ ◀──┘
-                │ Top-k    │       │ Vectorize    │
-                │ chunks   │       │ bigrams      │
-                └────┬─────┘       │ sublinear TF │
-                     │             └──────────────┘
-                     ▼
-              ┌──────────────┐
-              │ Prompt +     │
-              │ context ───▶ │  AI generates lesson / quiz
-              │ from chunks  │
-              └──────────────┘
-```
-
-**Key features of the RAG implementation:**
-
-- **Sentence-aware chunking** — splits on sentence boundaries (`.!?`) and paragraph breaks instead of raw word counts, keeping context coherent
-- **Sliding-window overlap** — 80-word overlap between chunks prevents information loss at boundaries
-- **Bigram TF-IDF** — `ngram_range=(1, 2)` captures multi-word terms like "binary search" or "neural network"
-- **Sublinear TF** — dampens high-frequency terms to give more weight to distinctive vocabulary
-- **Score threshold** — filters out low-relevance chunks (cosine similarity < 0.05) with a fallback guarantee
-- **Multi-file support** — uploading additional files appends to the existing chunk store per session
-- **Text cleaning** — normalises whitespace, removes control characters, collapses blank lines
-- **PPTX table extraction** — extracts text from both shapes and table cells
-- **Slide attribution** — chunks from PPTX include `[Slide N]` markers for traceability
-
----
-
-## 🃏 Flashcard System
-
-- AI generates 10 flashcards per topic with a **front** (question) and **back** (answer)
-- Can generate from curriculum knowledge or from **uploaded material** (RAG-backed)
-- Interactive flip animation (Framer Motion 3D transform)
-- Cards marked as "Known" are removed; progress bar shows remaining count
-- Automatic key normalisation (`question→front`, `answer→back`) for consistent rendering
-
----
-
-## 📊 Dashboard Analytics
-
-The mastery dashboard provides real-time learning analytics:
-
-| Metric | Description |
-|---|---|
-| **Overall Accuracy** | Percentage across all attempts |
-| **Mastery Score** | Exponential moving average (0 – 100%) |
-| **Level History** | Timeline of level changes (B → I → A) |
-| **Topic Accuracy** | Heatmap of performance by topic area |
-| **Question-Type Accuracy** | Breakdown by MCQ, True/False, Short, Q&A |
-| **Weaknesses** | Auto-detected weak areas with < 50% accuracy |
-| **Recommendations** | AI-generated study suggestions based on gaps |
-
----
-
-## 📝 Supported Subjects
-
-| # | Subject |
-|---|---|
-| 1 | Data Structures & Algorithms |
-| 2 | Machine Learning |
-| 3 | Operating Systems |
-| 4 | Database Management |
-| 5 | Computer Networks |
-| 6 | Object Oriented Programming |
-| 7 | Web Development |
-| 8 | Discrete Mathematics |
-| 9 | Computer Architecture |
-| 10 | Cyber Security |
-| 11 | Cloud Computing |
-| 12 | Artificial Intelligence |
-
----
-
-## 🧩 Question Types
-
-| Type | Format | Grading |
+| Method | Endpoint | Function |
 |---|---|---|
-| **MCQ** | 4 options, single correct | Exact match |
-| **True / False** | Boolean answer | Exact match |
-| **Short Answer** | Brief text response | AI-assisted |
-| **Descriptive (Q&A)** | Long-form with expected points | Point coverage |
-| **Mixed** | Random combination of above | Per-type rules |
+| `POST` | `/api/start-session` | Start subject session |
+| `POST` | `/api/diagnostic-questions` | Generate diagnostic question set |
+| `POST` | `/api/diagnostic` | Submit diagnostic answers + assign level |
+| `POST` | `/api/generate-lesson` | Generate level-specific lesson |
+| `POST` | `/api/generate-exercise` | Generate level-specific exercise |
+| `POST` | `/api/submit-exercise` | Grade answers + adjust level + update analytics |
+| `POST` | `/api/progress` | Return dashboard metrics |
+| `POST` | `/api/upload-material` | Upload PDF/PPTX |
+| `POST` | `/api/generate-from-material` | Generate lesson/exercise from uploaded material |
+| `POST` | `/api/generate-flashcards` | Generate flashcards |
+| `POST` | `/api/generate-podcast` | Generate podcast script (+ optional TTS output) |
+| `GET` | `/api/podcast-audio/{filename}` | Stream generated audio files |
 
 ---
 
-## 🛠️ Development Notes
+## 🧠 Adaptive Logic (Technical)
 
-### Switching AI Providers
+### Level placement
+- `score >= 75` -> `Advanced`
+- `40 <= score < 75` -> `Intermediate`
+- `score < 40` -> `Beginner`
 
-| Mode | `IS_GEMINI` | Model | Rate Limit |
-|---|---|---|---|
-| **Production** | `true` | Gemini 2.5 Flash | ~1500 req/day (free tier) |
-| **Development** | `false` | Ollama / Mistral (local) | Unlimited |
+### Level adjustment (exercise loop)
+- Uses mastery-aware adjustment when mastery is available.
+- Promotes/demotes user level based on evolving performance.
 
-The AI client (`gemini_client.py`) includes:
-- **Smart retry** with exponential backoff (up to 4 retries)
-- **429 handling** — parses `retryDelay` from Gemini error responses
-- **JSON unwrapping** — handles Ollama's tendency to wrap arrays in `{data: [...]}` objects
+### Performance model
+Tracked per session:
+- per-topic accuracy
+- per-question-type accuracy
+- mastery score (0-100)
+- streak + best streak
+- recommendation generation from weakness signals
 
-### MongoDB Atlas SSL
+---
 
-If you encounter `SSL: CERTIFICATE_VERIFY_FAILED`, ensure `certifi` is installed:
+## 📄 RAG Engine (Deep Dive)
 
-```bash
-pip install certifi
-```
+### Pipeline
+1. **Extract** text from PDF/PPTX
+2. **Clean** + normalize text
+3. **Chunk** sentence-aware with overlap
+4. **Vectorize** via TF-IDF (`ngram_range=(1,2)`, `sublinear_tf=True`)
+5. **Retrieve** top-k chunks by cosine similarity
+6. **Generate** grounded lesson/exercise prompt
 
-The database module uses `certifi.where()` as the TLS CA file automatically.
+### Why this works
+- Sentence-aware chunking preserves semantic continuity.
+- Overlap reduces boundary information loss.
+- Bigram TF-IDF captures technical phrase units.
+- Low-latency retrieval without heavy vector DB dependency.
 
-### Environment Changes
+---
 
-Changes to `.env` require a **server restart** — the `IS_GEMINI` flag is cached at first use for performance.
+## 🎙️ Podcast Engine
+
+- Generates two-speaker educational script (`host`, `guest`).
+- Optional segment-level and full-episode audio rendering with ElevenLabs.
+- Audio served from backend `/api/podcast-audio/*` route.
+
+---
+
+## 🎧 Zen Soundscapes Module
+
+Bundled assets:
+- 🌧️ Rain
+- 🌲 Forest
+- 🌊 Ocean
+- 🟤 Brown Noise
+- 🎹 Lo-fi Piano
+
+Behavior:
+- Smooth fade in on reading-focused screens
+- Auto fade/pause in active/speaking contexts
+- Hard stop on podcast view
+
+---
+
+## 🧘 Wellness Coach Module
+
+### 1) Camera-Tracked Tension Trainer
+Real-time pose landmark tracking for:
+1. Tilt Left
+2. Tilt Right
+3. Chin Down
+4. Shoulder Rolls
+
+Each step advances by **detected movement/hold**, not just blind timers.
+
+### 2) Breathing Regulator
+Cycle-based animation:
+- Inhale (4s)
+- Hold (4s)
+- Exhale (6s)
+
+### 3) Eye Exercise
+Moving red-point pursuit path to encourage smooth ocular tracking.
+
+---
+
+## 🧪 Known Operational Notes
+
+- `.env` changes require backend restart.
+- Camera routines require browser camera permission.
+- Atlas failures are typically URI/user/IP whitelist issues.
+- Ollama mode requires local daemon and pulled model.
+
+---
+
+## 🛣️ Suggested Next Upgrades
+
+- Auth + multi-user profiles
+- Persisted RAG store (instead of in-memory only)
+- Background jobs for heavy podcast generation
+- Unit/integration tests for API contracts
+- Deployment docs (Vercel + Render/Fly + Atlas)
 
 ---
 
 ## 📜 License
 
-This project is built for the hackathon and is available under the [MIT License](LICENSE).
+MIT
