@@ -10,6 +10,7 @@ import DashboardPage from "./dashboard";
 import Flashcards from "./flashcards";
 import MaterialUpload from "./material-upload";
 import PodcastPage from "./podcast";
+import SoundscapePlayer from "@/components/SoundscapePlayer";
 
 export type Step = "select" | "quiz" | "lesson" | "exercise" | "dashboard" | "flashcards" | "upload" | "podcast";
 
@@ -52,6 +53,14 @@ export default function Home() {
 
   const coreSteps = ["quiz", "lesson", "exercise", "dashboard"] as Step[];
   const currentIndex = coreSteps.indexOf(step);
+  const soundMode =
+    step === "lesson" || step === "dashboard" || step === "flashcards" || step === "upload"
+      ? "reading"
+      : step === "podcast"
+      ? "podcast"
+      : step === "quiz" || step === "exercise"
+      ? "speaking"
+      : "neutral";
 
   return (
     <main className="relative min-h-screen bg-bg-primary">
@@ -134,8 +143,10 @@ export default function Home() {
             </div>
           )}
 
-          {/* Quick-access: Upload & Flashcards — always visible */}
+          {/* Quick-access: Upload, Flashcards, Podcast + Zen sound */}
           <div className="flex items-center gap-2">
+            <SoundscapePlayer mode={soundMode} />
+
             <button
               onClick={() => navigate("upload")}
               className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
