@@ -29,7 +29,9 @@ export default function SoundscapePlayer({ mode }: SoundscapePlayerProps) {
   const [selectedId, setSelectedId] = useState(TRACKS[0].id);
   const [baseVolume, setBaseVolume] = useState(0.35);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  // Whether the user *wants* the soundscape on (persists across mode changes)
+  const [wantsPlaying, setWantsPlaying] = useState(false);
+  const prevModeRef = useRef<SoundMode>(mode);
 
   const selectedTrack = useMemo(
     () => TRACKS.find((t) => t.id === selectedId) ?? TRACKS[0],
@@ -103,10 +105,11 @@ export default function SoundscapePlayer({ mode }: SoundscapePlayerProps) {
   };
 
   const handleToggle = async () => {
-    setHasInteracted(true);
     if (isPlaying) {
+      setWantsPlaying(false);
       pauseWithFadeOut();
     } else {
+      setWantsPlaying(true);
       await playWithFadeIn();
     }
   };
@@ -132,19 +135,20 @@ export default function SoundscapePlayer({ mode }: SoundscapePlayerProps) {
   }, [selectedTrack.src]);
 
   useEffect(() => {
+    const prevMode = prevModeRef.current;
+    prevModeRef.current = mode;
+
     if (mode === "podcast") {
-      pauseNow();
+      // Pause when entering podcast (but keep wantsPlaying so it resumes after)
+      if (isPlaying) pauseNow();
       return;
     }
-    if (!hasInteracted) return;
-    if (mode === "reading" && !isPlaying) {
+
+    // Resume playback when leaving podcast (or any mode) if user wants it
+    if (wantsPlaying && !isPlaying) {
       void playWithFadeIn();
-      return;
     }
-    if (mode === "speaking" && isPlaying) {
-      pauseWithFadeOut();
-    }
-  }, [mode, hasInteracted, isPlaying, baseVolume]);
+  }, [mode]);
 
   useEffect(() => {
     return () => {
