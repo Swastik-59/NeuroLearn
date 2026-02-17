@@ -45,7 +45,9 @@ body {
 }
 
 @layer base {
-  input, textarea {
+
+  input,
+  textarea {
     @apply caret-accent-secondary;
   }
 }
@@ -70,4 +72,60 @@ body {
   .loading-spinner {
     @apply h-5 w-5 animate-spin rounded-full border-2 border-accent-primary/30 border-t-accent-secondary;
   }
+}
+
+/* ── Custom Cursor ── */
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  [role="button"] {
+    cursor: none;
+  }
+}
+
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a78bfa;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: difference;
+  transition: width 0.2s ease, height 0.2s ease, background 0.2s ease;
+}
+
+.cursor-dot.is-hovering {
+  width: 12px;
+  height: 12px;
+  background: #c4b5fd;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(167, 139, 250, 0.35);
+  pointer-events: none;
+  z-index: 9998;
+  mix-blend-mode: difference;
+  transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease;
+}
+
+.cursor-ring.is-hovering {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(196, 181, 253, 0.5);
 }
