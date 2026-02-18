@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import axios from "axios";
+import { registerUser } from "@/lib/api";
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -61,11 +61,7 @@ export default function SignupPage() {
     }
 
     try {
-      await axios.post("http://localhost:8000/api/auth/register", {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      });
+      await registerUser(formData.username, formData.email, formData.password);
       router.push("/login?registered=true");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Registration failed");
@@ -256,16 +252,14 @@ export default function SignupPage() {
                   <div className="space-y-1 pt-1">
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                          s <= passwordStrength.score ? passwordStrength.color : "bg-border-secondary"
-                        }`} />
+                        <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-300 ${s <= passwordStrength.score ? passwordStrength.color : "bg-border-secondary"
+                          }`} />
                       ))}
                     </div>
-                    <p className={`text-xs font-medium ${
-                      passwordStrength.score <= 1 ? "text-red-400" :
-                      passwordStrength.score <= 2 ? "text-orange-400" :
-                      passwordStrength.score <= 3 ? "text-yellow-400" : "text-green-400"
-                    }`}>{passwordStrength.label}</p>
+                    <p className={`text-xs font-medium ${passwordStrength.score <= 1 ? "text-red-400" :
+                        passwordStrength.score <= 2 ? "text-orange-400" :
+                          passwordStrength.score <= 3 ? "text-yellow-400" : "text-green-400"
+                      }`}>{passwordStrength.label}</p>
                   </div>
                 )}
               </div>
@@ -283,13 +277,12 @@ export default function SignupPage() {
                     type={showConfirm ? "text" : "password"}
                     required
                     autoComplete="new-password"
-                    className={`w-full bg-bg-input border rounded-xl pl-10 pr-11 py-3 text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:ring-2 transition-all ${
-                      !passwordsMatch
+                    className={`w-full bg-bg-input border rounded-xl pl-10 pr-11 py-3 text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:ring-2 transition-all ${!passwordsMatch
                         ? "border-status-error focus:border-status-error focus:ring-status-error/15"
                         : formData.confirmPassword && passwordsMatch
-                        ? "border-status-success focus:border-status-success focus:ring-status-success/15"
-                        : "border-border-primary focus:border-border-focus focus:ring-accent-primary/15"
-                    }`}
+                          ? "border-status-success focus:border-status-success focus:ring-status-success/15"
+                          : "border-border-primary focus:border-border-focus focus:ring-accent-primary/15"
+                      }`}
                     placeholder="Repeat your password"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}

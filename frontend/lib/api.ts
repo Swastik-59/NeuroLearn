@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
 const api = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: API_BASE,
   timeout: 120000,
   headers: { "Content-Type": "application/json" },
 });
@@ -142,7 +144,26 @@ export interface PodcastResponse {
   segments: number;
 }
 
-export const AUDIO_BASE = "http://localhost:8000";
+export const AUDIO_BASE = API_BASE.replace(/\/api$/, "");
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+export async function registerUser(username: string, email: string, password: string) {
+  const res = await api.post("/auth/register", { username, email, password });
+  return res.data;
+}
+
+export async function loginUser(email: string, password: string) {
+  const formData = new URLSearchParams();
+  formData.append("username", email);
+  formData.append("password", password);
+  const res = await api.post("/auth/login", formData, {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
+  return res.data;
+}
 
 // ---------------------------------------------------------------------------
 // Session

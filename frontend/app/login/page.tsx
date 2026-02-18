@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import axios from "axios";
+import { loginUser } from "@/lib/api";
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -41,15 +41,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", password);
-
-      const response = await axios.post("http://localhost:8000/api/auth/login", formData, {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      });
-
-      const { access_token, userId } = response.data;
+      const { access_token, userId } = await loginUser(email, password);
       localStorage.setItem("token", access_token);
       localStorage.setItem("userId", userId);
       router.push(`/${userId}/dashboard`);

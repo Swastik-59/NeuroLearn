@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from schemas import (
     StartSessionRequest,
@@ -74,7 +75,7 @@ async def register(user: UserCreate):
         "email": user.email,
         "hashed_password": hashed_password,
         "is_active": True,
-        "created_at": str(uuid.uuid4()) # Placeholder for timestamp
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await users_collection.insert_one(new_user)
@@ -458,6 +459,20 @@ async def serve_podcast_audio(filename: str):
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _is_answer_correct(qtype: str, user: str, expected: str) -> bool:
+    """Check if a single answer is correct based on question type."""
+    if qtype == "true_false":
+        if user in ("true", "1", "yes") and expected in ("true", "1", "yes"):
+            return True
+        if user in ("false", "0", "no") and expected in ("false", "0", "no"):
+            return True
+        return False
+    elif qtype == "qa":
+        return bool(user and expected and (user in expected or expected in user))
+    else:
+        return user == expected
+
+
 def _add_correct_flags(answers: list[dict]) -> list[dict]:
     """Return answer dicts with a 'correct' boolean added, based on scoring logic."""
     scored = []
@@ -465,18 +480,7 @@ def _add_correct_flags(answers: list[dict]) -> list[dict]:
         qtype = ans.get("type", "short")
         user = str(ans.get("user_answer", "")).strip().lower()
         expected = str(ans.get("correct_answer", "")).strip().lower()
-        is_correct = False
-        if qtype == "true_false":
-            if user in ("true", "1", "yes") and expected in ("true", "1", "yes"):
-                is_correct = True
-            elif user in ("false", "0", "no") and expected in ("false", "0", "no"):
-                is_correct = True
-        elif qtype == "qa":
-            if user and expected and (user in expected or expected in user):
-                is_correct = True
-        else:
-            is_correct = user == expected
-        scored.append({**ans, "correct": is_correct})
+        scored.append({**ans, "correct": _is_answer_correct(qtype, user, expected)})
     return scored
 
 
@@ -488,17 +492,6 @@ def _score_answers(answers: list[dict]) -> tuple[int, int]:
         qtype = ans.get("type", "short")
         user = str(ans.get("user_answer", "")).strip().lower()
         expected = str(ans.get("correct_answer", "")).strip().lower()
-
-        if qtype == "true_false":
-            if user in ("true", "1", "yes") and expected in ("true", "1", "yes"):
-                correct += 1
-            elif user in ("false", "0", "no") and expected in ("false", "0", "no"):
-                correct += 1
-        elif qtype == "qa":
-            # QA is not auto-graded; give partial credit if any overlap
-            if user and expected and (user in expected or expected in user):
-                correct += 1
-        else:
-            if user == expected:
-                correct += 1
+        if _is_answer_correct(qtype, user, expected):
+            correct += 1
     return correct, total

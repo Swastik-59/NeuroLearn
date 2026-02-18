@@ -4,8 +4,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timezone
 from performance_tracker import empty_performance
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority")
+MONGO_URI = os.getenv("MONGO_URI", "")
 DB_NAME = os.getenv("MONGO_DB", "neurolearn")
+
+if not MONGO_URI:
+    print("[DB] WARNING: MONGO_URI not set. Add it to backend/.env or set it as an environment variable.")
+    print("[DB] Example: MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/?retryWrites=true&w=majority")
 
 client: AsyncIOMotorClient = None
 db = None
