@@ -27,16 +27,19 @@ export default function Flashcards({ sessionId, subject: propSubject, hasMateria
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
   const [topic, setTopic] = useState("");
+  const [customTopic, setCustomTopic] = useState("");
   const [fromMaterial, setFromMaterial] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [error, setError] = useState("");
   const [known, setKnown] = useState<Set<number>>(new Set());
 
   const generate = async () => {
-    if (!effectiveSubject) {
-      setError("Please select a subject first.");
+    // Must have at least a subject OR a custom topic
+    if (!effectiveSubject && !customTopic.trim()) {
+      setError("Please select a subject or enter a custom topic.");
       return;
     }
+    if (loading) return; // prevent double submit
     setLoading(true);
     setError("");
     try {
@@ -44,16 +47,26 @@ export default function Flashcards({ sessionId, subject: propSubject, hasMateria
         sessionId || undefined,
         topic || undefined,
         fromMaterial,
-        standalone ? effectiveSubject : undefined,
+        standalone ? effectiveSubject || undefined : undefined,
         undefined,
+        customTopic.trim() || undefined,
       );
+      if (!res.flashcards || res.flashcards.length === 0) {
+        setError("No flashcards were generated. Try a different topic.");
+        setLoading(false);
+        return;
+      }
       setCards(res.flashcards);
       setCurrent(0);
       setFlipped(false);
       setGenerated(true);
       setKnown(new Set());
-    } catch {
-      setError("Failed to generate flashcards. Check backend connection.");
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error && "response" in err
+          ? (err as any).response?.data?.detail || "Failed to generate flashcards."
+          : "Failed to generate flashcards. Check backend connection.";
+      setError(msg);
     }
     setLoading(false);
   };
@@ -122,7 +135,7 @@ export default function Flashcards({ sessionId, subject: propSubject, hasMateria
             {effectiveSubject ? (
               <>Generate study cards for <span className="font-medium text-accent-secondary">{effectiveSubject}</span></>
             ) : (
-              "Pick a subject and generate study cards"
+              "Pick a subject or enter a custom topic"
             )}
           </p>
         </div>
@@ -148,7 +161,7 @@ export default function Flashcards({ sessionId, subject: propSubject, hasMateria
             )}
 
             <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-text-dim">Topic (optional)</span>
+              <span className="mb-1.5 block text-xs font-medium text-text-dim">Topic (optional — refine within subject)</span>
               <input
                 type="text"
                 value={topic}
@@ -156,6 +169,26 @@ export default function Flashcards({ sessionId, subject: propSubject, hasMateria
                 placeholder="e.g. Binary Trees, Sorting, Normalization..."
                 className="w-full rounded-lg border border-border-primary bg-bg-input px-4 py-2.5 text-sm text-text-primary placeholder:text-text-dim focus:border-accent-primary/50 focus:outline-none focus:ring-2 focus:ring-accent-primary/10 transition-all"
               />
+            </label>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border-primary/40" /></div>
+              <div className="relative flex justify-center"><span className="bg-bg-card px-3 text-[10px] uppercase tracking-widest text-text-dim">or</span></div>
+            </div>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-text-dim">Custom Topic (any topic — no subject needed)</span>
+              <input
+                type="text"
+                value={customTopic}
+                onChange={(e) => setCustomTopic(e.target.value)}
+                placeholder="e.g. French Revolution, Quantum Mechanics, Cooking Basics..."
+                className="w-full rounded-lg border border-border-primary bg-bg-input px-4 py-2.5 text-sm text-text-primary placeholder:text-text-dim focus:border-accent-primary/50 focus:outline-none focus:ring-2 focus:ring-accent-primary/10 transition-all"
+              />
+              {customTopic.trim() && (
+                <p className="mt-1 text-[10px] text-accent-secondary">Will generate flashcards directly for this topic</p>
+              )}
             </label>
 
             {hasMaterial && sessionId && (

@@ -56,7 +56,12 @@ from material_rag import (
     build_rag_lesson_prompt,
     build_rag_exercise_prompt,
 )
-from flashcard_engine import generate_flashcard_prompt, generate_flashcard_from_material_prompt
+from flashcard_engine import (
+    generate_flashcard_prompt,
+    generate_flashcard_custom_topic_prompt,
+    generate_flashcard_from_material_prompt,
+    validate_flashcards,
+)
 
 router = APIRouter()
 
@@ -339,29 +344,53 @@ async def generate_flashcards(req: FlashcardRequest):
     level = (session.get("level") if session else None) or req.level or "Beginner"
     if level == "unknown":
         level = "Beginner"
-    if not subject:
-        raise HTTPException(status_code=400, detail="Subject is required (via session or request body)")
 
+    # Resolve custom_topic: allow the old `topic` field to act as custom_topic
+    # when no subject is available (backward compat)
+    custom_topic = (req.custom_topic or "").strip()
+    topic = (req.topic or "").strip()
+
+    # Determine generation mode:
+    #   1. from_material → RAG
+    #   2. custom_topic (or topic when no subject) → direct LLM with free-form topic
+    #   3. subject-based (optionally focused by topic)
     if req.from_material and req.session_id and has_material(req.session_id):
-        query = f"{subject} {req.topic or ''}"
+        query = f"{subject or ''} {topic or custom_topic}".strip()
         chunks = retrieve_chunks(req.session_id, query, top_k=5)
         prompt = generate_flashcard_from_material_prompt(chunks)
+        display_subject = subject or custom_topic or "Uploaded Material"
+    elif custom_topic:
+        prompt = generate_flashcard_custom_topic_prompt(custom_topic)
+        display_subject = custom_topic
+    elif subject:
+        prompt = generate_flashcard_prompt(subject, level, topic or None)
+        display_subject = subject
+    elif topic:
+        # topic provided but no subject — treat as custom topic
+        prompt = generate_flashcard_custom_topic_prompt(topic)
+        display_subject = topic
     else:
-        prompt = generate_flashcard_prompt(subject, level, req.topic)
+        raise HTTPException(
+            status_code=400,
+            detail="Provide a subject, custom_topic, or topic to generate flashcards.",
+        )
 
+    # Generate with one retry on empty/invalid result
     cards = await generate_json(prompt)
+    normalized = validate_flashcards(cards)
 
-    # Normalize: some models return {question, answer} instead of {front, back}
-    normalized = []
-    for c in cards:
-        front = c.get("front") or c.get("question") or c.get("term") or ""
-        back = c.get("back") or c.get("answer") or c.get("definition") or ""
-        if front or back:
-            normalized.append({"front": front, "back": back})
+    if len(normalized) < 1:
+        # Retry once
+        cards = await generate_json(prompt, retries=1)
+        normalized = validate_flashcards(cards)
+
     if not normalized:
-        normalized = [{"front": "No flashcards generated", "back": "Please try again."}]
+        raise HTTPException(
+            status_code=502,
+            detail="AI failed to generate valid flashcards. Please try again.",
+        )
 
-    return FlashcardResponse(flashcards=normalized, subject=subject)
+    return FlashcardResponse(flashcards=normalized, subject=display_subject)
 
 
 # ---------------------------------------------------------------------------

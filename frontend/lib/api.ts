@@ -263,9 +263,17 @@ export async function generateFlashcards(
   topic?: string,
   from_material: boolean = false,
   subject?: string,
-  level?: string
+  level?: string,
+  custom_topic?: string,
 ): Promise<FlashcardResponse> {
-  const res = await api.post("/generate-flashcards", { session_id, topic, from_material, subject, level });
+  const res = await api.post("/generate-flashcards", {
+    session_id,
+    topic,
+    from_material,
+    subject,
+    level,
+    custom_topic,
+  });
   return res.data;
 }
 

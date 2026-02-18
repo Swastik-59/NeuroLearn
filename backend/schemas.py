@@ -94,8 +94,9 @@ class MaterialExerciseResponse(BaseModel):
 class FlashcardRequest(BaseModel):
     session_id: Optional[str] = None
     topic: Optional[str] = None
+    custom_topic: Optional[str] = None   # free-form topic (no subject needed)
     from_material: bool = False
-    subject: Optional[str] = None   # standalone mode (required when no session_id)
+    subject: Optional[str] = None   # standalone mode (required when no session_id and no custom_topic)
     level: Optional[str] = None     # standalone mode
 
 
